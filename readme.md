@@ -1,4 +1,4 @@
-# Locamato
+# Locamatos
 
 Site de location de matériel cinéma
 
