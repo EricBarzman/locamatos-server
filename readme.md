@@ -1,3 +1,7 @@
-# Readme
+# Locamato
 
-## npx tsc --init
+Site de location de matériel cinéma
+
+## Serveur
+
+Stack MERN (MongoDB/Express/NodeJS)
