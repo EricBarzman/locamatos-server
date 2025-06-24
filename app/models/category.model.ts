@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, SchemaTypes, model } from "mongoose";
 import { ICategory, ISubCategory } from "../types/category.type";
 
 const CategorySchema = new Schema<ICategory>({
@@ -22,8 +22,13 @@ const SubCategorySchema = new Schema<ISubCategory>({
   slug: {
     type: String,
     required: true,
+  },
+  category: {
+    type: SchemaTypes.ObjectId,
+    ref: 'category',
+    required: true,
   }
 });
 
-export const SubCategoryModel = model<ISubCategory>("subCategory", SubCategorySchema);
+export const SubCategoryModel = model<ISubCategory>("subcategory", SubCategorySchema);
 export const CategoryModel = model<ICategory>("category", CategorySchema);

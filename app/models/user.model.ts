@@ -10,7 +10,7 @@ const UserSchema = new Schema<IUser>({
     type: String,
     required: true,
   },
-  avatarId: {
+  avatarPath: {
     type: String,
     required: true,
   }

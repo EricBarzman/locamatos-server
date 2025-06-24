@@ -12,7 +12,7 @@ router.get("/", async (_, res: Response) => {
   } catch (err) {
     console.error(err);
     res.status(400).json(err);
-  }
+  } 
 
 })
 
@@ -20,22 +20,37 @@ router.get("/", async (_, res: Response) => {
 router.get("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
-    const product = await ProductModel.findById(id);
+    const product = await ProductModel.findById(id).populate("category").populate("subcategory");
     if (!product) res.status(404).send("Produit introuvable");
 
-    res.send(product);
+    else res.send(product);
 
   } catch (err) {
     console.error(err);
     res.status(400).json(err);
   }
-
 })
 
 // Create one
 router.post("/", async (req: Request, res: Response) => {
+  const {
+    nom,
+    description,
+    imageUrls,
+    price,
+    categoryId,
+    subcategoryId
+  } = req.body;
+
   try {
-    const newProduct = new ProductModel({ ...req.body });
+    const newProduct = new ProductModel({
+      nom,
+      description,
+      imageUrls,
+      price,
+      category: categoryId,
+      subcategory: subcategoryId
+    });
     await newProduct.save();
     res.status(200).send(newProduct);
 
@@ -52,7 +67,7 @@ router.post("/:id", async (req: Request, res: Response) => {
     const updatedProduct = await ProductModel.findByIdAndUpdate(id, { ...req.body });
     if (!updatedProduct) res.status(404).send({ message: "Echec à mettre à jour le produit" });
 
-    res.status(200).send(updatedProduct);
+    else res.status(200).send(updatedProduct);
 
   } catch (err) {
     console.error(err);
@@ -61,14 +76,14 @@ router.post("/:id", async (req: Request, res: Response) => {
 });
 
 // Delete
-router.delete("/id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
     const deletedProduct = await ProductModel.findByIdAndDelete(id);
     if (!deletedProduct) res.status(404).send({ message: "Echec à supprimer le produit" });
 
-    res.status(200).send(deletedProduct);
+    else res.status(200).send(deletedProduct);
 
   } catch (err) {
     console.error(err);

@@ -1,4 +1,4 @@
-import { Schema, model } from "mongoose";
+import { Schema, SchemaTypes, model } from "mongoose";
 import { IProduct } from "../types/product.type";
 
 const ProductSchema = new Schema<IProduct>({
@@ -9,19 +9,27 @@ const ProductSchema = new Schema<IProduct>({
   },
   price: {
     type: Number,
-    required: true,
+    required: false,
     min: [1, "Le prix doit être supérieur à 1"]
   },
   description: {
     type: String,
-    required: true,
+    required: false,
   },
   imageUrls: [{
     type: String,
+    required: false,
   }],
-  categories: [{
-    type: String,
-  }]
+  category: {
+    type: SchemaTypes.ObjectId,
+    ref: "category",
+    required: true,
+  },
+  subcategory: {
+    type: SchemaTypes.ObjectId,
+    ref: "subcategory",
+    required: true,
+  },
 });
 
 export const ProductModel = model<IProduct>("product", ProductSchema);

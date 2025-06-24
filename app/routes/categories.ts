@@ -60,7 +60,7 @@ router.post("/:id", async (req: Request, res: Response) => {
     const updatedCategory = await CategoryModel.findByIdAndUpdate(id, newData);
     if (!updatedCategory) res.status(404).send({ message: "Echec à mettre à jour la catégorie" });
 
-    res.status(200).send(updatedCategory);
+    else res.status(200).send(updatedCategory);
 
   } catch (err) {
     console.error(err);
@@ -69,7 +69,7 @@ router.post("/:id", async (req: Request, res: Response) => {
 });
 
 // Delete
-router.delete("/id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {

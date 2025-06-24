@@ -18,10 +18,11 @@ router.get("/", async (_, res: Response) => {
 
 // Get one by ID
 router.get("/:id", async (req: Request, res: Response) => {
-  const id = req.params;
+  const { id } = req.params;
   try {
-    const subcategory = await SubCategoryModel.findById(id);
-    if (!subcategory) res.status(404).send({ message: "Sous-catégorie introuvable" })
+    const subcategory = await SubCategoryModel.findById(id).populate("category");
+    if (!subcategory) res.status(404).send({ message: "Sous-catégorie introuvable" });
+
     res.status(200).send(subcategory);
 
   } catch (err) {
@@ -32,15 +33,18 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 // Create one
 router.post("/", async (req: Request, res: Response) => {
-  const { nom } = req.body;
+  const { nom, category } = req.body;
+  const { _id } = category;
   const slug = slugify(nom);
-
+  
+  const newData = { nom, slug, category: _id };
+  
   try {
-    const newSubCategory = new SubCategoryModel({ nom, slug })
+    const newSubCategory = new SubCategoryModel(newData)
     const result = await newSubCategory.save();
     if (!result) res.status(404).send({ message: "Echec à créer la sous-catégorie" })
-    
-      res.status(200).send({ message: "Sous-catégorie bien créée " });
+
+    res.status(200).send({ message: "Sous-catégorie bien créée " });
 
   } catch (err) {
     console.error(err);
@@ -50,11 +54,12 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.post("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { nom } = req.body;
+  const { nom, category } = req.body;
+  const { _id } = category;
   const slug = slugify(nom);
 
-  const newData = { nom, slug };
-
+  const newData = { nom, slug, category: _id }
+  
   try {
     const updatedSubCategory = await SubCategoryModel.findByIdAndUpdate(id, newData);
     if (!updatedSubCategory) res.status(404).send({ message: "Echec à mettre à jour la sous-catégorie" });
@@ -67,9 +72,9 @@ router.post("/:id", async (req: Request, res: Response) => {
   }
 });
 
-router.delete("/id", async (req: Request, res: Response) => {
+router.delete("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
-  
+
   try {
     const deletedSubCategory = await SubCategoryModel.findByIdAndDelete(id);
     if (!deletedSubCategory) res.status(404).send({ message: "Echec à supprimer la sous-catégorie" });
