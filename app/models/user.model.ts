@@ -8,11 +8,16 @@ const UserSchema = new Schema<IUser>({
   },
   email: {
     type: String,
+    unique: true,
+    required: true,
+  },
+  password: {
+    type: String,
     required: true,
   },
   avatarPath: {
     type: String,
-    required: true,
+    required: false,
   }
 });
 
