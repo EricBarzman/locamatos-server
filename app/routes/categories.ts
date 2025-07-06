@@ -21,7 +21,10 @@ router.get("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
   try {
     const category = await CategoryModel.findById(id);
-    if (!category) res.status(404).send({ message: "Catégorie introuvable" })
+    if (!category) {
+      res.status(404).send({ message: "Catégorie introuvable" });
+      return;
+    }
     res.status(200).send(category);
 
   } catch (err) {
@@ -76,7 +79,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     const deletedCategory = await CategoryModel.findByIdAndDelete(id);
     if (!deletedCategory) res.status(404).send({ message: "Echec à supprimer la catégorie" });
 
-    res.status(200).send(deletedCategory);
+    res.status(200).json(deletedCategory);
 
   } catch (err) {
     console.error(err);

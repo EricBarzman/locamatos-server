@@ -25,17 +25,11 @@ router.get("/:id", async (req: Request, res: Response) => {
   try {
     const user = await UserModel.findById(id);
     if (!user) {
-      res.status(404).send({ message: "Utilisateur non trouvé" });
+      res.status(404).json({ message: "Utilisateur non trouvé" });
       return;
     }
 
-    res.json({
-      user: {
-        email: user.email,
-        username: user.username,
-        avatarPath: user.avatarPath || ""
-      }
-    });
+    res.json(user);
 
   } catch (err) {
     console.error(err);
@@ -46,20 +40,21 @@ router.get("/:id", async (req: Request, res: Response) => {
 // Update
 router.put("/:id", async (req: Request, res: Response) => {
   const { id } = req.params;
-  const { username, email } = req.body;
+  const {
+    email,
+    address,
+    firstname,
+    lastname,
+  } = req.body;
 
   try {
-    const updatedUser = await UserModel.findByIdAndUpdate(id, { username, email });
+    const updatedUser = await UserModel.findByIdAndUpdate(id, { email, address, firstname, lastname });
     if (!updatedUser) {
-      res.status(404).send({ message: "Echec à mettre à jour l'utilisateur" });
+      res.status(400).send({ message: "Echec à mettre à jour l'utilisateur" });
       return;
     }
 
-    res.status(200).send({ user : {
-      email: updatedUser.email,
-      username: updatedUser.username,
-      avatarPath: updatedUser.avatarPath || ""
-    }});
+    res.status(200).json(updatedUser);
 
   } catch (err) {
     console.error(err);
@@ -67,36 +62,105 @@ router.put("/:id", async (req: Request, res: Response) => {
   }
 })
 
+// Create
+router.post("/", async (req: Request, res: Response) => {
+  const {
+    email,
+    address,
+    firstname,
+    lastname,
+    password,
+  } = req.body;
+
+  if (email === "" || email === undefined) {
+    res.status(400).json({ message: "L'email ne peut être vide" })
+    return;
+  }
+
+  if (password === "" || password === undefined || password.length < 6) {
+    res.status(400).json({ message: "Le mot de passe doit contenir 6 caractères" });
+    return;
+  }
+  const hashedPassword = await makeBCryptPassword(password);
+
+  try {
+
+    const emailAlreadyExists = await UserModel.findOne({ email });
+    if (emailAlreadyExists) {
+      res.status(500).json({ message: "Cet email est déjà enregistré" });
+      return;
+    }
+
+    const newUser = new UserModel({
+      email,
+      password: hashedPassword,
+      address: address || "",
+      firstname: firstname || "",
+      lastname: lastname || "",
+    })
+
+    newUser.save();
+    res.status(200).json(newUser);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err);
+  }
+})
+
+// Delete
+router.delete("/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const deleted = await UserModel.findByIdAndDelete(id);
+    if (!deleted)
+      res.status(404).send({ message: "Echec à supprimer la catégorie" });
+
+    res.status(200).json({ message: "Utilisateur bien supprimé" });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json(err);
+  }
+})
+
 
 // Register
 router.post("/register", async (req: Request, res: Response) => {
-  const { username, email, password, avatarPath } = req.body;
+  const { email, password, address, firstname, lastname } = req.body;
 
   if (email === "" || email === undefined) {
     res.status(404).json({ message: "L'email ne peut être vide" })
     return;
   }
 
-  if (username === "" || username === undefined) {
-    res.status(404).json({ message: "Le nom d'utilisateur ne peut être vide" })
+  if (password === "" || password === undefined || password.length < 6) {
+    res.status(404).json({ message: "Le mot de passe doit contenir 6 caractères" });
     return;
   }
-
-  if (password === "" || password === undefined || password.length < 6)
-    res.status(404).json({ message: "Le mot de passe doit contenir 6 caractères" })
 
   const hashedPassword = await makeBCryptPassword(password);
 
   try {
+
+    const emailAlreadyExists = await UserModel.findOne({ email });
+    if (emailAlreadyExists) {
+      res.status(403).json({ message: "Cet email est déjà enregistré" });
+      return;
+    }
+
     const newUser = new UserModel({
-      username,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      address: address || "",
+      firstname: firstname || "",
+      lastname: lastname || "",
     })
 
     newUser.save();
     const token = createJSONWebToken(newUser._id, email);
-    res.status(200).send({ isLogged: true, token });
+    res.status(200).json({ isLogged: true, token });
 
   } catch (err) {
     console.error(err);
@@ -112,18 +176,18 @@ router.post("/login", async (req: Request, res: Response) => {
   try {
     const user = await UserModel.findOne({ email });
     if (!user) {
-      res.status(401).send({ message: "Cet email ne correspond à aucun utilisateur connu" })
+      res.status(401).json({ message: "Cet email ne correspond à aucun utilisateur connu" })
       return;
     }
 
     const hashedPassword = user.password;
     if (!await compareBCryptPassword(password, hashedPassword)) {
-      res.status(401).send({ message: "Mot de passe incorrect" })
+      res.status(401).json({ message: "Mot de passe incorrect" })
       return;
     }
 
     const token = createJSONWebToken(user._id, email);
-    res.status(200).send({ isLogged: true, token })
+    res.status(200).json({ isLogged: true, token })
 
   } catch (err) {
     console.error(err);
@@ -133,7 +197,7 @@ router.post("/login", async (req: Request, res: Response) => {
 
 // Reset Password
 router.post("/reset-password/", async (req: Request, res: Response) => {
-  const { _id, password } = req.body;
+  const { id, password } = req.body;
 
   if (password === "" || password === undefined) {
     res.status(403).send({ message: "Le mot de passe doit contenir 6 caractères" })
@@ -142,7 +206,7 @@ router.post("/reset-password/", async (req: Request, res: Response) => {
   const newHashedPassword = makeBCryptPassword(password);
 
   try {
-    const user = await UserModel.findByIdAndUpdate(_id, { password: newHashedPassword });
+    const user = await UserModel.findByIdAndUpdate(id, { password: newHashedPassword });
     if (!user) {
       res.status(500).send({ message: "Utilisateur introuvable" })
       return;

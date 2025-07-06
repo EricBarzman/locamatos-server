@@ -2,10 +2,6 @@ import { Schema, model } from "mongoose";
 import { IUser } from "../types/user.type";
 
 const UserSchema = new Schema<IUser>({
-  username: {
-    type: String,
-    required: true,
-  },
   email: {
     type: String,
     unique: true,
@@ -15,10 +11,18 @@ const UserSchema = new Schema<IUser>({
     type: String,
     required: true,
   },
-  avatarPath: {
+  firstname: {
     type: String,
     required: false,
-  }
+  },
+  lastname: {
+    type: String,
+    required: false,
+  },
+  address: {
+    type: String,
+    required: false,
+  },
 });
 
 export const UserModel = model<IUser>("user", UserSchema);
